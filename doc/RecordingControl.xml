@@ -4,19 +4,19 @@
   <info>
     <title>ONVIF Recording Control Service Specification</title>
     <titleabbrev>RecordingControl</titleabbrev>
-    <releaseinfo>19.06</releaseinfo>
+    <releaseinfo>23.06</releaseinfo>
     <author>
       <orgname>ONVIF™</orgname>
       <uri>www.onvif.org</uri>
     </author>
-    <pubdate>June, 2019</pubdate>
+    <pubdate>June, 2023</pubdate>
     <mediaobject>
       <imageobject>
-        <imagedata fileref="media/logo.png" contentwidth="60mm" />
+        <imagedata fileref="media/logo.png" contentwidth="60mm"/>
       </imageobject>
     </mediaobject>
     <copyright>
-      <year>2008-2020</year>
+      <year>2008-2023</year>
       <holder>ONVIF™ All rights reserved.</holder>
     </copyright>
     <legalnotice>
@@ -147,6 +147,30 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         </author>
         <revremark>Added Scheduled Recording</revremark>
       </revision>
+      <revision>
+        <revnumber>21.12</revnumber>
+        <date>Dec-2021</date>
+        <author>
+          <personname>Sergey Bogdanov</personname>
+        </author>
+        <revremark>Change the "role" attribute for request access class.</revremark>
+      </revision>
+      <revision>
+        <revnumber>22.12</revnumber>
+        <date>Dec-2022</date>
+        <author>
+          <personname>Hans Busch</personname>
+        </author>
+        <revremark>Add support for event recording.</revremark>
+      </revision>
+      <revision>
+        <revnumber>23.06</revnumber>
+        <date>Jun-2023</date>
+        <author>
+          <personname>Felix Schuetz</personname>
+        </author>
+        <revremark>Add annex on object storage recording.</revremark>
+      </revision>
     </revhistory>
   </info>
   <chapter>
@@ -157,8 +181,14 @@ Change Request 2061, 2063, 2065, 2109</revremark>
   </chapter>
   <chapter>
     <title>Normative references</title>
-    <para role="reference">
-      <phrase>ONVIF Core Specification</phrase> &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://www.onvif.org/specs/core/ONVIF-Core-Specification.pdf"></link>&gt;</para>
+    <para role="reference">ISO/IEC 14496-12:2022 — Information technology — Coding of audio-visual objects — Part 12: ISO base media file format &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.iso.org/standard/83102.html" />&gt;</para>
+    <para role="reference">ISO/IEC 14496-14:2020 — Information technology — Coding of audio-visual objects — Part 14: MP4 file format &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.iso.org/standard/79110.html" />&gt;</para>
+    <para role="reference">ISO/IEC 23000-19:2020 — Information technology — Multimedia application format (MPEG-A) — Part 19: Common media application format (CMAF) for segmented media &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.iso.org/standard/79106.html" />&gt;</para>
+    <para role="reference">ISO/IEC 23001-7:2016 — Information technology — MPEG systems technologies — Part 7: Common encryption in ISO base media file format files &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.iso.org/standard/68042.html" />&gt;</para>
+    <para role="reference">ISO 8601-1:2019 — Date and time — Representations for information interchange — Part 1: Basic rules &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.iso.org/standard/70907.html" />&gt;</para>
+    <para role="reference">RFC 5234 — Augmented BNF for Syntax Specifications: ABNF &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.ietf.org/rfc/rfc5234.txt" />&gt;</para>
+    <para role="reference">RFC 6381 — The 'Codecs' and 'Profiles' Parameters for "Bucket" Media Types &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.ietf.org/rfc/rfc6381.txt" />&gt;</para>
+    <para role="reference">ONVIF Core Specification &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://www.onvif.org/specs/core/ONVIF-Core-Specification.pdf"></link>&gt;</para>
     <para role="reference">ONVIF Schedule Service Specification &lt;<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.onvif.org/specs/srv/sched/ONVIF-Scheduler-Service-Spec.pdf"></link>&gt; </para>
   </chapter>
   <chapter>
@@ -167,8 +197,8 @@ Change Request 2061, 2063, 2065, 2109</revremark>
       <title>Definitions</title>
       <informaltable>
         <tgroup cols="2">
-          <colspec colname="c1" colwidth="24*" />
-          <colspec colname="c2" colwidth="76*" />
+          <colspec colname="c1" colwidth="24*"/>
+          <colspec colname="c2" colwidth="76*"/>
           <tbody valign="top">
             <row>
               <entry align="left">
@@ -343,7 +373,24 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <para>To save data to a recording, a client first creates a recording and ensures that the recording has the necessary tracks. Then the client creates a recording job that pulls data from one or more sources and stores the data to the tracks in the recording. </para>
         <para>Clients may set up multiple recording jobs that all record into the same recording. If multiple recording jobs are active, the device uses a priority scheme to select between the tracks defined in the recording jobs. Clients may change the mode of recording jobs at any time, thereby providing means to implement features like alarm recording or manual recording.</para>
         <para>If a device supports scheduled recording, clients may configure scheduled recording by adding a scheduler token to the recording job. A recording job with a scheduler token will only record when the associated schedule is active. If the associated schedule of a recording job is inactive a job with lower recording priority may record.</para>
+        <para>By default a recording job is continuously recording. Devices supporting the
+          EventFilter can be configured such that they only record events. To provide some context
+          time intervals before and after the event may be captured.</para>
         <para>The recording job relies on the receiver service for receiving the data from other devices through receiver objects identified by ReceiverTokens</para>
+      </section>
+      <section>
+        <title>External targets</title>
+        <para>
+          The target interface allows configuration for devices that support recording to external storage targets. 
+          For authentication configuration see the related storage configuration APIs of the core specification.
+        </para>
+        <para>
+          The target API defines for each recording a path on the storage device where the related recordings should be stored.
+          In order to keep reasonably sized files the recordings are split into segments.
+          This specification defines a date and time based index.
+          Indexing according to events and video content is outside of the scope of this specification.
+        </para>
+        <para>An encryption configuration interface allows to encrypt the content according to well defined standards.</para>
       </section>
     </section>
   </chapter>
@@ -384,8 +431,64 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <para>The RecordingConfiguration structure shall be used to configure recordings through CreateRecordings and Get/SetRecordingConfiguration.</para>
         <para>
           <emphasis role="bold">MaximumRetentionTime</emphasis> specifies the maximum time that data in any track within the recording shall be stored. The device shall delete any data older than the maximum retention time. Such data shall not be accessible anymore. If the MaximumRetentionPeriod is set to 0, the device shall not limit the retention time of stored data, except by resource constraints. Whatever the value of MaximumRetentionTime, the device may automatically delete recordings to free up storage space for new recordings.</para>
-        <para>None of the other fields defined in this structure shall be used by the device. Instead, it simply stores this information, and it shall return it through the <emphasis>GetRecordingConfiguration</emphasis> and <emphasis>GetRecordingInformation</emphasis> (see ONVIF Recording Search Service Specification) methods.</para>
-        <para>A device may truncate any descriptive string without causing a fault if it exceeds the supported length. Descriptive strings are Location, Description and Content.</para>
+        <para>
+          None of the other fields defined in this structure shall be used by the device.
+          Instead, it simply stores this information, and it shall return it through the <emphasis>GetRecordingConfiguration</emphasis> and <emphasis>GetRecordingInformation</emphasis> (see ONVIF Recording Search Service Specification) methods.</para>
+        <para>
+          A device may truncate any descriptive string without causing a fault if it exceeds the supported length.
+          Descriptive strings are Location, Description and Content.
+        </para>
+        <para>
+          A device signaling support for recording to external targets via the SupportedTargetFormats capability shall support the target configuration with the following parameters:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term>Storage</term>
+            <listitem>
+              <para>Token of a storage configuration.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Format</term>
+            <listitem>
+              <para>
+                Format of the recording.
+                Examples are <literal>MP4</literal> and <literal>CMAF</literal>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Prefix</term>
+            <listitem>
+              <para>Path prefix to be inserted in the object key.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Postfix</term>
+            <listitem>
+              <para>Path postfix to be inserted in the object key.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>SpanDuration</term>
+            <listitem>
+              <para>Maximum duration of a span.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>SegmentDuration</term>
+            <listitem>
+              <para>Maximum duration of a segment.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Encryption</term>
+            <listitem>
+              <para>Optional encryption configuration.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para> See <xref linkend="_refCloudRecording"/> for ONVIF defined recording formats.</para>
       </section>
       <section>
         <title>TrackConfiguration</title>
@@ -396,13 +499,12 @@ Change Request 2061, 2063, 2065, 2109</revremark>
       </section>
       <section>
         <title>RecordingJobConfiguration</title>
-        <para>The RecordingJobConfiguration structure shall hold the configuration for a recording job. As a UML diagram, the RecordingJobConfiguration can be viewed as:</para>
-        <figure>
-          <title>
-          </title>
+        <para>The RecordingJobConfiguration structure shall hold the configuration for a recording job. Its UML diagram is hown in <xref linkend="image3"/>.</para>
+        <figure xml:id="image3">
+          <title>UML diagram of the RecordingJobConfiguration</title>
           <mediaobject>
             <imageobject>
-              <imagedata fileref="media/RecordingControl/image3.svg" contentwidth="38.34mm" contentdepth="75.89mm" />
+              <imagedata fileref="media/RecordingControl/image3.svg" contentdepth="75.89mm" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -412,21 +514,70 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <para>
           <emphasis role="bold">Mode</emphasis>: If it is idle, nothing shall happen. If it is active and the recording job has the highest priority, the device shall try to obtain data from the receivers. A client shall use GetRecordingJobState to determine if data transfer is really taking place. The only valid values for Mode shall be “Idle” and “Active”.</para>
         <para>
-          <emphasis role="bold">Priority</emphasis>: This shall be a non-negative number. If there are multiple recording jobs that store data to the same track, the device will only store the data for the recording job with the highest priority. The priority is specified per recording job, but the device shall determine the priority of each track individually. If there are two recording jobs with the same priority, the device shall record the data corresponding to the recording job that was activated the latest.</para>
+          <emphasis role="bold">Priority</emphasis>: This shall be a non-negative number. If there
+          are multiple recording jobs that store data to the same track, the device shall only store
+          data for the recording job with the highest priority. The priority is specified per
+          recording job, but the device shall determine the priority of each track individually. If
+          there are multiple recording jobs with the same highest priority it is undefind which of
+          them is activated.</para>
         <para>The value 0 indicates the lowest priority. Higher values shall indicate a higher priority.</para>
         <para>
           <emphasis role="bold">ScheduleToken:</emphasis> This attribute adds an additional requirement for activating the recording job. If this optional field is provided the job shall only record if the schedule exists and is active.</para>
         <para>
+          <emphasis role="bold">EventFilter:</emphasis> This set of parameters allows to control recording depending on a given set of event condititions.</para>
+        <para>
           <emphasis role="bold">SourceToken</emphasis>: This field shall be a reference to the source of the data. The type of the source is determined by the attribute Type in the SourceToken structure. If Type is http://www.onvif.org/ver10/schema/Receiver, the token is a ReceiverReference. In this case the device shall receive the data over the network. If Type is http://www.onvif.org/ver10/schema/Profile, the token identifies a media profile, instructing the device to obtain data from a profile that exists on the local device. </para>
         <para>A device that includes the ONVIF Media Service shall support a Media Profile token and a device that includes the ONVIF Receiver Service shall support a Receiver token.</para>
-        <para>If the <emphasis role="bold">SourceToken</emphasis> is omitted, <emphasis role="bold">AutoCreateRecevier</emphasis> shall be true.</para>
         <para>
-          <emphasis role="bold">AutoCreateReceiver</emphasis>: If this field is TRUE, and if the <emphasis role="bold">SourceToken</emphasis> is omitted, the device shall create a receiver object (through the receiver service) and assign the ReceiverReference to the <emphasis role="bold">SourceToken</emphasis> field. When retrieving the RecordingJobConfiguration from the device, the <emphasis role="bold">AutoCreateReceiver</emphasis> field shall never be present.</para>
+          <emphasis role="bold">AutoCreateReceiver</emphasis>: If a request includes this field set to true and no source token is provided, the device shall create a
+          receiver object (through the receiver service) and assign the ReceiverReference to the
+          <emphasis role="bold">SourceToken</emphasis> field. A device shall never report this parameter in a 
+          RecordingJobConfiguration. A device may reject a request that neither contains a SourceToken nor AutoCreateRecevier set to true.</para>
         <para>
           <emphasis role="bold">SourceTag</emphasis>: If the received RTSP stream contains multiple tracks of the same type, the <emphasis role="bold">SourceTag</emphasis> differentiates between those Tracks.</para>
         <para>
           <emphasis role="bold">Destination</emphasis>: The destination is the track token of the track to which the device shall store the received data. All tracks must belong to the recording identified by the RecordingToken.</para>
         <para>The TrackInformation field for a Track holds a single Source. In case multiple RecordingJobs with differing Source are recording to the same Track it is undefined which of them is reported in the corresponding TrackInformation of the the RecordingSearch API.</para>
+      </section>
+      <section>
+        <title>Event recording</title>
+        <para>A device signalling support for EventRecording via its capabilities shall support
+          controling recording job activity via the EventFilter with the following set of
+          parameters: 
+          </para>
+        <variablelist>
+          <varlistentry>
+            <term>Filter</term>
+            <listitem>
+              <para>One or more filter pairs containing a mandatory topic filter as defined in section 9.6.3 of the ONVIF Core Specification. It may be associated with an optional message content filter as defined in section 9.4.4 of the ONVIF Core
+                Specification. </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Before</term>
+            <listitem>
+              <para>Optional timespan to record before the actual event condition became active.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>After</term>
+            <listitem>
+              <para>Optional timespan to record after the actual event condition becomes
+                inactive.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para>A device shall support filtering on topics and message source parameters. Filtering on message data values doesn't need to be supported since it may cause malfunctions.</para>
+        <para>A device shall support Before and After durations when their limit is signalled via
+          the respective capability. A device may adapt the Before and After duration values to internal
+          quantization. </para>
+        <para>A device shall at least record the event duration and the specified before and after
+          timesspans. Due to the nature of GOP structures it may record more.</para>
+        <para>Note that non-property events result in an infinite short timespan. In such cases at least one I-Frame shall be recorded, optionally
+          extended by before and after timespans. </para>
+        <para>A recording job of a device supporting both EventFilter and ScheduledRecording shall
+          become active if both conditions are met.</para>
       </section>
     </section>
     <section>
@@ -462,7 +613,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -546,7 +697,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -577,7 +728,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -613,7 +764,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -646,7 +797,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -688,7 +839,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -730,7 +881,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -767,7 +918,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -807,7 +958,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -815,6 +966,8 @@ Change Request 2061, 2063, 2065, 2109</revremark>
     <section>
       <title>CreateRecordingJob</title>
       <para>CreateRecordingJob shall create a new recording job. A device shall support adding a RecordingJob to a recording for which it signals Spare jobs via GetRecordingOptions.</para>
+      <para>A device should reject a configuration that neither includes a source with a source token nor AutoCreateReceiver set to true.</para>
+      <para>If the configuration doesn not include any tracks a device should assign all tracks of the corresponding recording.</para>
       <variablelist role="op">
         <varlistentry>
           <term>request</term>
@@ -848,11 +1001,14 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
-      <para>The JobConfiguration returned from CreateRecordingJob shall be identical to the JobConfiguration passed into CreateRecordingJob, except for the ReceiverToken and the AutoCreateReceiver. In the returned structure, the ReceiverToken shall be present and valid and the AutoCreateReceiver field shall be omitted.</para>
+      <para>If a request with AutoCreateReceiver is accepted the response shall provide the attached
+        receiver token and the AutoCreateReceiver field shall be omitted.</para>
+      <para>The device response shall include the complete JobConfiguration including the associated
+        job token and the resulting recording track configuration.</para>
     </section>
     <section xml:id="_Toc246137491">
       <title>DeleteRecordingJob</title>
@@ -881,7 +1037,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -912,7 +1068,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -952,7 +1108,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -986,7 +1142,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1024,7 +1180,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">ACTUATE</para>
+            <para role="access">ACTUATE</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1073,7 +1229,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1164,24 +1320,36 @@ Change Request 2061, 2063, 2065, 2109</revremark>
           <listitem>
             <para role="param">JobOptions [trc:JobOptions ]</para>
             <para role="text">Contains two attributes:</para>
+            <para role="text">Spare: Number of spare jobs that can be created for the recording. By setting none of
+              the Spare attribute the device signals that no job can be created.</para>
+            <para role="text">CompatibleSources: A device that supports recording of a restricted set of
+              Media/Media2 Service Profiles shall return the list of profiles that can be recorded on
+              the given Recording.
+            </para>
             <para role="param">TrackOptions [trc:TrackOptions]</para>
             <para role="text">Contains four attributes:</para>
+            <para role="text">SpareTotal: Total spare number of tracks that can be added to this recording.</para>
+              <para role="text">SpareVideo: Number of spare video tracks for this recording</para>
+            <para role="text">SpareAudio: Number of spare audio tracks for this recording</para>
+            <para role="text">SpareMetadata: Number of spare metadata tracks for this recording</para>
+            <para role="text">By setting none of the spare attributes the device signals that no
+              track can be added.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>faults</term>
           <listitem>
-            <para role="text">env:Sender - ter:InvalidArgVal - ter:NoRecording</para>
+            <para role="param">env:Sender - ter:InvalidArgVal - ter:NoRecording</para>
+            <para role="text">The RecordingToken does not reference an existing recording.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
-      <para>The RecordingToken does not reference an existing recording.</para>
     </section>
     <section>
       <title>ExportRecordedData</title>
@@ -1222,7 +1390,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1260,7 +1428,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1296,7 +1464,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">READ_MEDIA</para>
+            <para role="access">READ_MEDIA</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1328,7 +1496,7 @@ Change Request 2061, 2063, 2065, 2109</revremark>
         <varlistentry>
           <term>access class</term>
           <listitem>
-            <para role="param">PRE_AUTH</para>
+            <para role="access">PRE_AUTH</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1386,6 +1554,45 @@ Change Request 2061, 2063, 2065, 2109</revremark>
           <term>ScheduledRecording</term>
           <listitem><para>Indication that the device supports scheduled recording.</para></listitem>
         </varlistentry>
+        <varlistentry>
+          <term>EventRecording</term>
+          <listitem><para>Indication that the device supports event triggered recording.</para></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>BeforeEventLimit</term>
+          <listitem><para>Indicates that the device supports before event durations up to the given value.</para></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>AfterEventLimit</term>
+          <listitem><para>Indicates that the device supports after event durations up to the given value.</para></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>SupportedTargetFormats</term>
+          <listitem>
+            <para>
+              List of formats supported by the device for recording to an external target.
+              See tt:TargetFormat for a list of definitions.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>EncryptionEntryLimit</term>
+          <listitem>
+            <para>
+              Number of encryption entries supported per recording.
+              By specifying multiple encryption entries per recording, different tracks can be encrypted with different configurations.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>SupportedEncryptionModes</term>
+          <listitem>
+            <para>
+              Supported encryption modes.
+              See tt:EncryptionMode for a list of definitions.
+            </para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </section>
     <section>
@@ -1405,21 +1612,20 @@ Change Request 2061, 2063, 2065, 2109</revremark>
   </tt:Data> 
 </tt:MessageDescription>
 ]]></programlisting>
+        <para>The ElementItem Information shall be provided whenever the state of the different tracks is not unique. It can be omitted when the state of all tracks of a recording is consistent.</para>
 </section>
       <section>
         <title>Configuration changes</title>
         <para>If the configuration of a recording is changed, a device shall provide the following event:</para>
         <para>Topic: tns1:RecordingConfig/<phrase>RecordingConfiguration</phrase></para>
         <programlisting><![CDATA[<tt:MessageDescription IsProperty="false"> 
-        <para>&lt;tt:MessageDescription IsProperty="false"&gt; </para>
-        <para>  &lt;tt:Source&gt; </para>
-        <para>    &lt;tt:SimpleItemDescription Name="RecordingToken" Type="tt:RecordingReference"/&gt; </para>
-        <para>  &lt;/tt:Source&gt; </para>
-        <para>  &lt;tt:Data&gt; </para>
-        <para>    &lt;tt:ElementItemDescription Name="Configuration" Type="tt:RecordingConfiguration"/&gt; </para>
-        <para>  &lt;/tt:Data&gt; </para>
-        <para>&lt;/tt:MessageDescription&gt;</para>
-]]></programlisting>
+  <tt:Source> 
+    <tt:SimpleItemDescription Name="RecordingToken" Type="tt:RecordingReference"/> 
+  </tt:Source> 
+  <tt:Data> 
+    <tt:ElementItemDescription Name="Configuration" Type="tt:RecordingConfiguration"/> 
+  </tt:Data> 
+</tt:MessageDescription>]]></programlisting>
         <para>If the configuration of a track is changed, a device shall provide the following event:</para>
         <para>Topic: tns1:RecordingConfig/<phrase>TrackConfiguration</phrase></para>
         <programlisting><![CDATA[<tt:MessageDescription IsProperty="false"> 
@@ -1511,14 +1717,17 @@ Change Request 2061, 2063, 2065, 2109</revremark>
       <section>
         <title>Example 1: setup recording of a single camera</title>
         <para>There are two steps involved. The first step is to configure the NVS</para>
-        <para>Create recording (this implicitly creates an A, V and M track)</para>
-        <programlisting><![CDATA[; RecordToken = CreateRecording(RecordConfiguration)
+        <programlisting><![CDATA[; Create recording (this implicitly creates an A, V and M track)
+RecordToken = CreateRecording(RecordConfiguration)
+
 ; The tracktokens are predefined. We don’t have to find them on the device
 TrackToken1 = “VIDEO001”
 TrackToken2 = “AUDIO001”
 TrackToken3 = “META001”
+
 ; Create a recording job, assume that we set mode to idle, auto create receiver
 JobToken, ActualJobConfig = CreateRecordingJob(JobConfiguration)
+
 ; Configure the receiver
 ConfigureReceiver(ActualJobConfiguration.ReceiverToken, ReceiverConfiguration)
 ]]></programlisting>
@@ -1535,21 +1744,23 @@ SetRecordingJobMode(JobToken, Active)
         <para>This example is very similar to example 1. The jobconfiguration will hold references to two receiver objects. Each receiver object is configured to receive from the same device, but from a different stream.</para>
         <programlisting><![CDATA[; Create recording (this implicitly creates an A, V and M track)
 RecordToken = CreateRecording(RecordConfiguration)
+
 ; The tracktokens are predefined. We don’t have to find them on the device
 TrackToken1 = “VIDEO001”
 TrackToken2 = “AUDIO001”
 TrackToken3 = “META001”
+
 ; Create three additional tracks
 TrackToken4 = CreateTrack(RecordToken, AudioConfig)
 TrackToken5 = CreateTrack(RecordToken, VideoConfig)
 TrackToken6 = CreateTrack(RecordToken, MetadataConfig)
+
 ; Create a recording job, assume that we set mode to idle,auto create two receivers
 JobToken, ActualJobConfiguration = CreateRecordingJob(JobConfiguration)
+
 ; Configure the receivers
-ConfigureReceiver(ActualJobConfiguration.ReceiverToken[1],
-Receiver1Configuration)
-ConfigureReceiver(ActualJobConfiguration.ReceiverToken[2],
-Receiver2Configuration)
+ConfigureReceiver(ActualJobConfiguration.ReceiverToken[1], Receiver1Configuration)
+ConfigureReceiver(ActualJobConfiguration.ReceiverToken[2], Receiver2Configuration)
 ]]></programlisting>
         <para>To really start recording, some entity calls</para>
         <programlisting><![CDATA[; Activate the recording job
@@ -1561,30 +1772,517 @@ SetRecordingJobMode(JobToken, Active)
   <appendix>
     <title>Example scenario for Recording Job Priority (Informative)</title>
     <para>This annex describes a scenario for Multiple Recording Jobs configured to record data into a single recording.</para>
-    <para>As described in Section <xref linkend="_Toc247178839" />, "If there are two recording jobs with the same priority, the device shall record the data corresponding to the recording job that was activated the latest."</para>
     <para>Accordingly, a device supporting Multiple Recording Jobs is required to change the Job Modes of Recording Jobs with respect to Priority, as described below :</para>
-    <para>Step 1: A Recording Job ‘J1’ with Priority ‘1’ is created in 'Active' mode</para>
-    <para>Job Modes of Recording Jobs after Step 1:</para>
-    <para>Recording Job ‘J1’ = ACTIVE</para>
-    <para>Step 2: A new Recording Job ‘J2’ with Priority ‘1’ is now created in 'Active' mode</para>
-    <para>Job Modes of Recording Jobs after Step 2:</para>
-    <para>Recording Job ‘J1’ = IDLE</para>
-    <para>Recording Job ‘J2’ = ACTIVE</para>
-    <para>Step 3 : Another Recording Job ‘J3’ with higher Priority ‘2’ is now created in 'Active' mode. Because it has a higher priority than J2, it takes precedence.</para>
-    <para>Job Modes of Recording Jobs after Step 3:</para>
-    <para>Recording Job ‘J1’ = IDLE</para>
-    <para>Recording Job ‘J2’ = IDLE</para>
-    <para>Recording Job ‘J3’ = ACTIVE</para>
-    <para>Step 4. Recording Job ‘J3’ is now deleted, 'J1' and 'J2' are both at the highest priority, so Section <xref linkend="_Toc246137491" /> applies, and the device can activate either 'J1' or 'J2'.</para>
-    <para>Job Modes of Recording Jobs after Step 4, possibility 1: </para>
-    <para>Recording Job ‘J1’ = ACTIVE</para>
-    <para>Recording Job ‘J2’ = IDLE</para>
-    <para>Job Modes of Recording Jobs after Step 4, possibility 2:</para>
-    <para>Recording Job ‘J1’ = IDLE</para>
-    <para>Recording Job ‘J2’ = ACTIVE</para>
+    <variablelist>
+      <varlistentry>
+        <term>Step&#8199;1</term> <!-- inhibit line break -->
+        <listitem>
+          <para>A Recording Job ‘J1’ with Priority ‘2’ is created in 'Active' mode</para>
+          <para>Job State of Recording Jobs after Step 1:</para>
+          <para>Recording Job ‘J1’ = ACTIVE</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Step 2</term>
+        <listitem>
+          <para>A new Recording Job ‘J2’ with Priority ‘4’ is now created in 'IDLE' mode</para>
+          <para>Job States of Recording Jobs after Step 2:</para>
+          <para>Recording Job ‘J1’ = ACTIVE</para>
+          <para>Recording Job ‘J2’ = IDLE</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Step 3</term>
+        <listitem>
+          <para>Another Recording Job ‘J3’ with higher Priority ‘3’ is now created in 'Active' mode. Because it has a higher priority than J1, it takes precedence.</para>
+          <para>Job States of Recording Jobs after Step 3:</para>
+          <para>Recording Job ‘J1’ = IDLE</para>
+          <para>Recording Job ‘J2’ = IDLE</para>
+          <para>Recording Job ‘J3’ = ACTIVE</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Step 4</term>
+        <listitem>
+          <para>Job States of Recording Jobs after Step 4:</para>
+          <para>Recording Job ‘J3’ is now deleted. 'J1' becomes active again since it is the active job with the highest priority.</para>
+          <para>Recording Job ‘J1’ = ACTIVE</para>
+          <para>Recording Job ‘J2’ = IDLE</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </appendix>
+  <appendix xml:id="_refCloudRecording">
+    <title>Object storage recording format (Normative)</title>
+    <section xml:id="_refCloudRecordingOverview">
+      <title>Overview</title>
+      <para>
+        This annex describes the requirements for recording from a device to an object storage for later use by a receiver.
+        The device could be a camera, the receiver could be a video player.
+        <xref linkend="_refCloudRecordingDataFlow" /> shows the data flow for object storage recording.
+      </para>
+      <figure xml:id="_refCloudRecordingDataFlow">
+        <title>Data flow for object storage recording</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="media/RecordingControl/cloudRecordingDataFlow.svg" contentwidth="140mm" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+      <para>
+        The device uploads recorded media as objects containing fragmented MP4 data according to ISO/IEC 14496-12, the ISO base media file format.
+        In this annex, a media object containing fragmented MP4 data is called a segment.
+        Each segment starts with a header containing initialization data, usually consisting of a <literal>FileTypeBox</literal> and a <literal>MovieBox</literal>.
+        Each segment contains one or more fragments with recorded media, usually consisting of a <literal>MovieFragmentBox</literal> and a <literal>MediaDataBox</literal>.
+        Each segment contains recorded media of a continuous period of time.
+      </para>
+      <para>
+        Multiple successive segments without a time gap in between form a span.
+        In this way, the size of segments can be limited when recording continuously for a longer period of time.
+      </para>
+      <para>
+        For a single span, only a single segment contains recorded media of one point in time.
+        Depending on the recording format, video, audio, and metadata are written into separate segments.
+        In this case, the segments of each media type form separate spans.
+        <xref linkend="_refCloudRecordingLogicalModel" /> shows the logical model for object storage recording.
+      </para>
+      <figure xml:id="_refCloudRecordingLogicalModel">
+        <title>Logical model for object storage recording</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="media/RecordingControl/cloudRecordingLogicalModel.svg" contentwidth="79mm" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+    <section xml:id="_refCloudRecordingSpans">
+      <title>Spans</title>
+      <para>
+        When a recording is activated, the device shall open new spans for this recording according to the rules of the configured <literal>Format</literal>.
+        Inversely, when a recording is deactivated, the device shall close all open spans of this recording.
+        When a <literal>SpanDuration</literal> is configured for a recording, the recording is active, and the duration of a span of this recording reaches the configured <literal>SpanDuration</literal>, the device shall close all open spans of the recording and open new spans according to the rules of the configured <literal>Format</literal>.
+      </para>
+      <para>
+        All fragments of a span shall be independently processable and presentable with the information of a <literal>MovieBox</literal> in any of the segments of the span.
+        If the information in the <literal>MovieBox</literal> required to process the fragments needs to change while the recording is active, the device shall close all open spans of the recording and start new spans according to the rules of the configured <literal>Format</literal>.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingSegments">
+      <title>Segments</title>
+      <para>
+        When a span is opened, the device shall also open a new segment for this span.
+        Inversely, when a span is closed, the device shall close the open segment of this span.
+        When a span is open and the duration of the open segment of this span reaches the <literal>SegmentDuration</literal> configured for the recording, the device shall close the open segment of this span and open a new segment for this span.
+        When closing the open segment of a span and opening a new segment for this span, there shall be no time gap between the two segments.
+      </para>
+      <para>
+        The device shall generate each segment as a fragmented MP4 file according to ISO/IEC 14496-12, the ISO base media file format.
+        A segment shall contain recorded media for the time it was open.
+        The recording formats provide specification about segment types, their contents, and restrictions on the ISO base media file format in the following sections.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingSegmentObjects">
+      <title>Segment objects</title>
+      <para>
+        The device shall upload each segment as one object, identified by its object key, to the object storage.
+        The device shall generate the object key for a segment according to the following ABNF <literal>key</literal> rule (according to RFC 5234):
+      </para>
+      <programlisting>key      = lead "/" time "." counter "." extension
+lead    = [prefix "/"] date ["/" postfix]
+counter = 1*DIGIT
+date    = year "-" month "-" day
+time    = hour "/" minute "-" second [secfrac] "Z"
+year    = 4DIGIT
+month   = 2DIGIT ; 01-12
+day     = 2DIGIT ; 01-31
+hour    = 2DIGIT ; 00-23
+minute  = 2DIGIT ; 00-59
+second  = 2DIGIT ; 00-60 (due to leap second rules)
+secfrac = "." 1*6DIGIT</programlisting>
+      <para>
+        If a <literal>Prefix</literal> is configured for the recording, the device shall include <literal>prefix</literal> in <literal>lead</literal> and replace it with the configured <literal>Prefix</literal>.
+        If a <literal>Postfix</literal> is configured for the recording, the device shall include <literal>postfix</literal> in <literal>lead</literal> and replace it with the configured <literal>Postfix</literal>.
+        The device shall replace <literal>date</literal> and <literal>time</literal> respectively with the date and time portion of the first sample contained in the segment in Universal Coordinated Time (UTC), following the ABNF rules:
+        <itemizedlist>
+          <listitem>
+            <para><literal>year</literal> represents the 4-digit year</para>
+          </listitem>
+          <listitem>
+            <para><literal>month</literal> represents the 2-digit month (01 to 12)</para>
+          </listitem>
+          <listitem>
+            <para><literal>day</literal> represents the 2-digit day of the month (01 to 31)</para>
+          </listitem>
+          <listitem>
+            <para><literal>hour</literal> represents the 2-digit hour (00 to 23)</para>
+          </listitem>
+          <listitem>
+            <para><literal>minute</literal> represents the 2-digit minute (00 to 59)</para>
+          </listitem>
+          <listitem>
+            <para><literal>second</literal> represents the 2-digit second (00 to 60, due to leap second rules)</para>
+          </listitem>
+          <listitem>
+            <para><literal>secfrac</literal> represents the optional fractional seconds with a precision of up to 6 digits</para>
+          </listitem>
+        </itemizedlist>
+        The device shall replace <literal>counter</literal> with a span-dependant counter set to 0 for a new span and incremented by 1 when closing a segment of this span.
+        The device shall replace <literal>extension</literal> with the extension defined by the type of span the segment belongs to.
+      </para>
+      <para>
+        Note: <literal>date</literal> is conformant to the extended date format defined in ISO 8601-1.
+        <literal>time</literal> is <emphasis role="bold">not</emphasis> conformant to the extended time format defined in ISO 8601-1.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingSpanEndObjects">
+      <title>Span end objects</title>
+      <para>
+        To store the end time of a span, the device should store an additional empty object when closing a span.
+        The device shall generate the object key for this object according to the ABNF <literal>key</literal> rule and replacement rules defined in <xref linkend="_refCloudRecordingSegmentObjects" />.
+        The device shall replace <literal>date</literal> and <literal>time</literal> respectively with the date and time portion of the end of the last sample contained in the span in Universal Coordinated Time (UTC), following the ABNF rules.
+        The device shall replace <literal>counter</literal> by a value equal to the counter of the last segment of the span plus 1.
+        The device shall replace <literal>extension</literal> according to the following ABNF <literal>extension</literal> rule (according to RFC 5234):
+      </para>
+      <programlisting>extension = span-extension "_end"</programlisting>
+      <para>
+        The device shall replace <literal>span-extension</literal> with the extension defined by the span type.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingRecordingFormatMP4">
+      <title>Recording format MP4</title>
+      <para>
+        If the <literal>Format</literal> configured for a recording is <literal>MP4</literal>, the device shall follow the rules given in this section.
+      </para>
+      <para>
+        The device shall open a single span for an active recording containing all tracks of the recording.
+        The device shall use <literal>mp4</literal> as the extension for this span type.
+        The device shall upload each segment object belonging to a span of this type with the content type <literal>video/mp4</literal>.
+        The device should include the <literal>codecs</literal> parameter in the content type according to RFC 6381.
+      </para>
+      <para>
+        The <literal>MovieBox</literal> contained in a segment shall not reference any samples.
+        A segment shall contain a <literal>MovieFragmentRandomAccessBox</literal> as the last box.
+        The <literal>MovieFragmentRandomAccessBox</literal> shall provide references for all tracks and their applicable <literal>MovieFragmentBox</literal> instances.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingRecordingFormatCMAF">
+      <title>Recording format CMAF</title>
+      <para>
+        If the <literal>Format</literal> configured for a recording is <literal>CMAF</literal>, the device shall follow the rules given in this section.
+      </para>
+      <para>
+        The device shall open up to three spans for an active recording, each containing a single track of the recording.
+      </para>
+      <para>
+        If the recording contains a video track, the device shall open a video span containing this track.
+        The device shall use <literal>m4v</literal> as the extension for this span type.
+        The device shall upload each segment object belonging to a span of this type with the content type <literal>video/mp4</literal>.
+      </para>
+      <para>
+        If the recording contains an audio track, the device shall open an audio span containing this track.
+        The device shall use <literal>m4a</literal> as the extension for this span type.
+        The device shall upload each segment object belonging to a span of this type with the content type <literal>audio/mp4</literal>.
+      </para>
+      <para>
+        If the recording contains a metadata track, the device shall open a metadata span containing this track.
+        The device shall use <literal>m4m</literal> as the extension for this span type.
+        The device shall upload each segment object belonging to a span of this type with the content type <literal>application/mp4</literal>.
+      </para>
+      <para>
+        The device should include the <literal>codecs</literal> parameter in the content type according to RFC 6381 for all span types defined in this section.
+      </para>
+      <para>
+        The device shall generate each segment according to ISO/IEC 23000-19, the common media application format (CMAF) for segmented media, with one CMAF header and one or more CMAF fragments.
+        A segment may contain a <literal>MovieFragmentRandomAccessBox</literal> as the last box.
+        If a segment contains a <literal>MovieFragmentRandomAccessBox</literal>, every CMAF fragment shall be referenced in the <literal>MovieFragmentRandomAccessBox</literal>.
+      </para>
+      <para>
+        Note: As the different tracks are contained in different spans, the segments do not necessarily align.
+        This is illustrated in <xref linkend="_refCloudRecordingCMAFSegments" />.
+      </para>
+      <figure xml:id="_refCloudRecordingCMAFSegments">
+        <title>Alignment of different segment types</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="media/RecordingControl/cloudRecordingCMAFSegments.svg" contentwidth="104mm" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+    <section xml:id="_refCloudRecordingEncryption">
+      <title>Encryption</title>
+      <para>
+        A device signaling support for recording to an external target with encryption shall support writing encrypted files according to ISO/IEC 23001-7 (common encryption in ISO base media file format files).
+        Each <literal>Encryption</literal> entry configured for a recording covers a distinct set of tracks for which to apply the encryption, identified by the <literal>Track</literal> element.
+        If an encryption entry contains no <literal>Track</literal> elements, it covers all tracks of the recording.
+        If an encryption entry contains one or more <literal>Track</literal> elements, it covers the tracks indicated by the track tokens contained in these elements.
+        The device shall encrypt the covered tracks with the scheme given by the <literal>Mode</literal> configured for the encryption entry:
+      </para>
+      <para>
+        <variablelist>
+          <varlistentry>
+            <term>CENC</term>
+            <listitem>
+              <para>
+                AES-CTR mode full sample and video NAL Subsample encryption, defined in ISO/IEC 23001-7.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>CBCS</term>
+            <listitem>
+              <para>
+                AES-CBC mode partial video NAL pattern encryption, defined in ISO/IEC 23001-7.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </para>
+      <para>
+        The device shall create an individual initialization vector for each segment.
+        The device shall encrypt with the <literal>Key</literal> configured for the encryption entry as the encryption key.
+        The device shall interpret the <literal>KID</literal> configured for the encryption entry as a 16-byte hexadecimal value and use this value as the key identifier.
+      </para>
+      <para>
+        If an encryption entry is reconfigured for an active recording, the device shall continue to use the old configuration for any open segments and shall start to use the new configuration for new segments.
+      </para>
+    </section>
+    <section xml:id="_refCloudRecordingObjectAttributes">
+      <title>Object attributes</title>
+      <para>
+        The device may store additional attributes defined in <xref linkend="_refCloudRecordingObjectAttributesTable" /> as object metadata when uploading segment objects.
+      </para>
+      <para>
+        Note: When sending attributes as metadata HTTP headers, the attribute keys need to be prefixed with a value determined by the type of storage configured for the recording.
+        If the storage is of type <literal>ObjectStorageS3</literal>, the attribute keys need to be prefixed with <literal>x-amz-meta-</literal> (for example <literal>x-amz-meta-Version: 1.0</literal>).
+        If the storage is of type <literal>ObjectStorageAzure</literal>, the attribute keys need to be prefixed with <literal>x-ms-meta-</literal> (for example <literal>x-ms-meta-Version: 1.0</literal>).
+        Audio-related attributes may be stored for segment objects containing only a video track and video-related attributes may be stored for segment objects containing only an audio track.
+      </para>
+      <table xml:id="_refCloudRecordingObjectAttributesTable">
+        <title>Object attributes</title>
+        <tgroup cols="3">
+          <colspec colwidth="20*" />
+          <colspec colwidth="60*" />
+          <colspec colwidth="50*" />
+          <thead>
+            <row>
+              <entry>
+                <para>Key</para>
+              </entry>
+              <entry>
+                <para>Value</para>
+              </entry>
+              <entry>
+                <para>Format</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para><literal>Version</literal></para>
+              </entry>
+              <entry>
+                <para><literal>1.0</literal></para>
+              </entry>
+              <entry>
+                <para><literal>major "." minor</literal></para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>Source</literal></para>
+              </entry>
+              <entry>
+                <para>Identifier of the physical device</para>
+              </entry>
+              <entry>
+                <para>String</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>EventTopic</literal></para>
+              </entry>
+              <entry>
+                <para>Topic of the event that triggered the recording job</para>
+              </entry>
+              <entry>
+                <para>String</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>Duration</literal></para>
+              </entry>
+              <entry>
+                <para>Duration of the segment</para>
+              </entry>
+              <entry>
+                <para>ISO 8601-1</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>FullContentType</literal></para>
+              </entry>
+              <entry>
+                <para>Combined content type of all media types contained in the recording</para>
+              </entry>
+              <entry>
+                <para><literal>video/mp4</literal> content type with <literal>codecs</literal> parameter according to RFC 6381</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>VideoChannel</literal></para>
+              </entry>
+              <entry>
+                <para>Video channel identifier</para>
+              </entry>
+              <entry>
+                <para>String</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>VideoBitrate</literal></para>
+              </entry>
+              <entry>
+                <para>Video bitrate in kilobits per second</para>
+              </entry>
+              <entry>
+                <para>Integer</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>VideoWidth</literal></para>
+              </entry>
+              <entry>
+                <para>Video width in pixels from <literal>VisualSampleEntry</literal></para>
+              </entry>
+              <entry>
+                <para>Integer</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>VideoHeight</literal></para>
+              </entry>
+              <entry>
+                <para>Video height in pixels from <literal>VisualSampleEntry</literal></para>
+              </entry>
+              <entry>
+                <para>Integer</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>VideoFramerate</literal></para>
+              </entry>
+              <entry>
+                <para>Average video framerate in frames per second</para>
+              </entry>
+              <entry>
+                <para>Float</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>AudioChannel</literal></para>
+              </entry>
+              <entry>
+                <para>Audio channel identifier</para>
+              </entry>
+              <entry>
+                <para>String</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>AudioBitrate</literal></para>
+              </entry>
+              <entry>
+                <para>Audio bitrate in kilobits per second</para>
+              </entry>
+              <entry>
+                <para>Integer</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para><literal>AudioSampleRate</literal></para>
+              </entry>
+              <entry>
+                <para>Audio sample rate in kilohertz</para>
+              </entry>
+              <entry>
+                <para>Integer</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section xml:id="_refCloudRecordingObjectExamples">
+      <title>Examples</title>
+      <para>
+        Given the following storage configuration in a recording configuration:
+      </para>
+      <programlisting><![CDATA[<tt:Target>
+  <tt:Storage>1</tt:Storage>
+  <tt:Format>MP4</tt:Format>
+  <tt:Prefix>site-2</tt:Prefix>
+  <tt:Postfix>camera-5</tt:Postfix>
+  <tt:SegmentDuration>PT60S</tt:SegmentDuration>
+</tt:Target>]]></programlisting>
+      <para>
+        The key of a segment object starting on 2022-11-08 at 15:08:23.547 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/15/08-23.547Z.0.mp4</programlisting>
+      <para>
+        The key of a span end object for a span consisting of 85 segments and ending on 2022-11-08 at 16:34:11.421 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/16/34-11.421Z.85.mp4_end</programlisting>
+      <para>
+        Given the following storage configuration in a recording configuration:
+      </para>
+      <programlisting><![CDATA[<tt:Target>
+  <tt:Storage>1</tt:Storage>
+  <tt:Format>CMAF</tt:Format>
+  <tt:Prefix>site-2</tt:Prefix>
+  <tt:Postfix>camera-5</tt:Postfix>
+  <tt:SegmentDuration>PT5S</tt:SegmentDuration>
+</tt:Target>]]></programlisting>
+      <para>
+        The key of a video segment object containing starting on 2022-11-08 at 15:08:23.547 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/15/08-23.547Z.0.m4v</programlisting>
+      <para>
+        The key of a span end object for a video span consisting of 1020 segments and ending on 2022-11-08 at 16:34:11.421 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/16/34-11.421Z.1020.m4v_end</programlisting>
+      <para>
+        The key of an audio segment object starting on 2022-11-08 at 15:08:23.989 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/15/08-23.989Z.0.m4a</programlisting>
+      <para>
+        The key of a span end object for an audio span consisting of 1020 segments and ending on 2022-11-08 at 16:34:11.779 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/16/34-11.779Z.1020.m4a_end</programlisting>
+      <para>
+        The key of a metadata segment object starting on 2022-11-08 at 15:08:23.692 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/15/08-23.692Z.0.m4m</programlisting>
+      <para>
+        The key of a span end object for a metadata span consisting of 1020 segments and ending on 2022-11-08 at 16:34:11.871 (UTC) is:
+      </para>
+      <programlisting>site-2/2022-11-08/camera-5/16/34-11.871Z.1020.m4m_end</programlisting>
+    </section>
   </appendix>
   <appendix role="revhistory">
     <title>Revision History</title>
-    <para />
+    <para/>
   </appendix>
 </book>
